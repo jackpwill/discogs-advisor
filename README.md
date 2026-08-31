@@ -6,16 +6,12 @@ asks Claude to **reason over those verified numbers** and produce a plain-Englis
 advisory: what your collection is worth, what's moving, what might be worth
 selling, and what to watch.
 
+Most "AI + data" demos let the model see raw data and do the math, which is
+exactly where language models hallucinate. I wanted to build a system where the LLM
+is genuinely useful but is **structurally prevented from touching the numbers**.
+
 ![screenshot placeholder](docs/screenshot.png)
 
-## Why I built it
-
-Most "AI + data" demos let the model see raw data and do the math, which is
-exactly where language models hallucinate — they'll happily invent a price or
-miscompute a percentage. I wanted to build the opposite: a system where the LLM
-is genuinely useful (interpretation, judgment, prose) but is **structurally
-prevented from touching the numbers**. This project is the smallest honest
-example of that pattern I could build against a real API.
 
 ## The core design: code computes, the LLM reasons, the app renders
 
