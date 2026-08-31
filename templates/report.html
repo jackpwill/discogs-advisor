@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Collection Advisory{% if username %} — {{ username }}{% endif %}</title>
+    <style>
+        :root {
+            --paper: #16130e;       /* warm near-black, not cold #0d1117 */
+            --ink: #ece3d0;         /* warm off-white */
+            --muted: #9d907a;
+            --rule: #322c22;
+            --accent: #cba15a;      /* brass / amber — LP-liner gold */
+            --up: #79b98c;
+            --down: #d76d55;
+            --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+            --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+        }
+        * { box-sizing: border-box; }
+        html { -webkit-font-smoothing: antialiased; }
+        body {
+            font-family: var(--serif);
+            color: var(--ink);
+            background-color: var(--paper);
+            /* faint warm glow so it doesn't read as flat #000 SaaS canvas */
+            background-image:
+                radial-gradient(circle at 18% 12%, rgba(203,161,90,0.05) 0, transparent 55%),
+                radial-gradient(circle at 88% 78%, rgba(215,109,85,0.04) 0, transparent 55%);
+            background-attachment: fixed;
+            margin: 0;
+            font-size: 17px;
+            line-height: 1.62;
+        }
+        .sheet { max-width: 720px; margin: 0 auto; padding: 64px 32px 120px; }
+
+        /* ---- masthead ---- */
+        .kicker {
+            font-size: 12px; letter-spacing: 0.24em; text-transform: uppercase;
+            color: var(--accent); font-weight: 600; margin: 0 0 14px;
+        }
+        h1.nameplate {
+            font-size: 46px; line-height: 1.02; margin: 0; font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+        h1.nameplate em { font-style: italic; font-weight: 500; }
+        .dek { font-style: italic; color: var(--muted); font-size: 17px; margin: 10px 0 0; }
+        .rule2 { border-top: 2px solid var(--ink); border-bottom: 1px solid var(--ink); height: 4px; margin: 22px 0 0; }
+
+        /* ---- summary ledger strip ---- */
+        .ledger { display: flex; flex-wrap: wrap; gap: 0; margin: 22px 0 8px; border-bottom: 1px solid var(--rule); padding-bottom: 20px; }
+        .ledger .cell { padding-right: 26px; margin-right: 26px; border-right: 1px solid var(--rule); }
+        .ledger .cell:last-child { border-right: none; }
+        .ledger .n { font-family: var(--mono); font-size: 25px; font-weight: 600; letter-spacing: -0.02em; }
+        .ledger .l { font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-top: 3px; }
+
+        /* ---- sections ---- */
+        section { margin-top: 46px; }
+        .accent-bar { width: 34px; height: 3px; background: var(--accent); margin-bottom: 12px; }
+        section > h2 { font-size: 21px; font-weight: 600; margin: 0 0 4px; letter-spacing: -0.01em; }
+        section > .caption { color: var(--muted); font-style: italic; font-size: 14px; margin: 0 0 18px; }
+
+        /* ---- advisory column ---- */
+        .advisory .entry { margin-bottom: 22px; }
+        .advisory .entry:last-child { margin-bottom: 0; }
+        .advisory h3 {
+            font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--accent); margin: 0 0 5px; font-weight: 600;
+        }
+        .advisory p { margin: 0; }
+        .ednote {
+            border-left: 3px solid var(--accent); padding: 2px 0 2px 16px;
+            color: var(--muted); font-style: italic; font-size: 15px; margin: 0 0 24px;
+        }
+        .ednote strong { color: var(--ink); font-style: normal; }
+
+        /* ---- ledger tables ---- */
+        table { width: 100%; border-collapse: collapse; font-size: 15.5px; }
+        thead th {
+            font-variant: small-caps; letter-spacing: 0.04em; font-weight: 600;
+            color: var(--muted); text-align: left; padding: 4px 0 8px; border-bottom: 1.5px solid var(--ink);
+        }
+        thead th.num, tbody td.num { text-align: right; }
+        tbody td { padding: 10px 0; border-bottom: 1px solid var(--rule); vertical-align: baseline; }
+        tbody tr:last-child td { border-bottom: none; }
+        .title { padding-right: 18px; }
+        .num { font-family: var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; white-space: nowrap; }
+        .up { color: var(--up); }
+        .down { color: var(--down); }
+
+        footer { margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--rule); color: var(--muted); font-size: 13.5px; font-style: italic; }
+        footer code { font-family: var(--mono); font-style: normal; font-size: 12px; background: rgba(203,161,90,0.12); padding: 1px 5px; border-radius: 3px; }
+        .empty { color: var(--muted); font-style: italic; margin-top: 40px; }
+        code { font-family: var(--mono); font-size: 13px; }
+    </style>
+</head>
+<body>
+<div class="sheet">
+    <header>
+        <p class="kicker">Discogs Price Advisory</p>
+        <h1 class="nameplate">The Collection <em>Ledger</em></h1>
+        <p class="dek">
+            {% if username %}A marketplace price advisory for {{ username }}’s Discogs collection{% else %}No collection configured{% endif %}{% if has_data and stats.tracking_window.start %} · prices tracked {{ stats.tracking_window.start }}{% if stats.tracking_window.end and stats.tracking_window.end != stats.tracking_window.start %}–{{ stats.tracking_window.end }}{% endif %}{% endif %}
+        </p>
+        <div class="rule2"></div>
+    </header>
+
+    {% if not has_data %}
+        <p class="empty">
+            No price history found. Set <code>DISCOGS_USERNAME</code> in your
+            <code>.env</code> and run <code>python sync.py</code> to collect
+            snapshots — or <code>python sample_data.py</code> for a demo — then reload.
+        </p>
+    {% else %}
+        <div class="ledger">
+            <div class="cell">
+                <div class="n">${{ '{:,.2f}'.format(stats.total_current_value or 0) }}</div>
+                <div class="l">Total value</div>
+            </div>
+            <div class="cell">
+                <div class="n">{{ stats.record_count }}</div>
+                <div class="l">Records</div>
+            </div>
+            <div class="cell">
+                <div class="n">{{ stats.records_with_price_history }}</div>
+                <div class="l">Tracked</div>
+            </div>
+            {% if stats.value_concentration.top_n_pct_of_total is not none %}
+            <div class="cell">
+                <div class="n">{{ stats.value_concentration.top_n_pct_of_total }}%</div>
+                <div class="l">In top {{ stats.value_concentration.top_n }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ===== LLM advisory: prose only, rendered by the app ===== -->
+        <section class="advisory">
+            <div class="accent-bar"></div>
+            <h2>The Advisory</h2>
+            <p class="caption">Interpretation of the figures below.</p>
+
+            {% if advisory_is_sample %}
+                <div class="ednote">
+                    <strong>Editor’s note —</strong> this advisory was composed
+                    deterministically by the app from the figures below; it is not a
+                    Claude response. Provide an <code>ANTHROPIC_API_KEY</code> for a
+                    live, model-written edition.{% if advisory_error %} (Live call failed: {{ advisory_error }}){% endif %}
+                </div>
+            {% endif %}
+
+            {% if advisory %}
+                <div class="entry"><h3>Overview</h3><p>{{ advisory.overview }}</p></div>
+                <div class="entry"><h3>Movers</h3><p>{{ advisory.movers }}</p></div>
+                <div class="entry"><h3>Consider Selling</h3><p>{{ advisory.consider_selling }}</p></div>
+                <div class="entry"><h3>Watch List</h3><p>{{ advisory.watch_list }}</p></div>
+            {% endif %}
+        </section>
+
+        {% if stats.biggest_gainers %}
+        <section>
+            <div class="accent-bar"></div>
+            <h2>Biggest Gainers</h2>
+            <p class="caption">Change measured first tracked price → current.</p>
+            <table>
+                <thead><tr><th class="title">Record</th><th class="num">First</th><th class="num">Now</th><th class="num">Change</th></tr></thead>
+                <tbody>
+                {% for r in stats.biggest_gainers %}
+                    <tr>
+                        <td class="title">{{ r.title }}</td>
+                        <td class="num">${{ '%.2f'|format(r.first_price) }}</td>
+                        <td class="num">${{ '%.2f'|format(r.current_price) }}</td>
+                        <td class="num up">+{{ r.change_pct }}%</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </section>
+        {% endif %}
+
+        {% if stats.biggest_losers %}
+        <section>
+            <div class="accent-bar"></div>
+            <h2>Biggest Decliners</h2>
+            <table>
+                <thead><tr><th class="title">Record</th><th class="num">First</th><th class="num">Now</th><th class="num">Change</th></tr></thead>
+                <tbody>
+                {% for r in stats.biggest_losers %}
+                    <tr>
+                        <td class="title">{{ r.title }}</td>
+                        <td class="num">${{ '%.2f'|format(r.first_price) }}</td>
+                        <td class="num">${{ '%.2f'|format(r.current_price) }}</td>
+                        <td class="num down">{{ r.change_pct }}%</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </section>
+        {% endif %}
+
+        {% if stats.most_volatile %}
+        <section>
+            <div class="accent-bar"></div>
+            <h2>Most Volatile</h2>
+            <p class="caption">Ranked by standard deviation of tracked prices.</p>
+            <table>
+                <thead><tr><th class="title">Record</th><th class="num">Low</th><th class="num">High</th><th class="num">Std&nbsp;dev</th></tr></thead>
+                <tbody>
+                {% for r in stats.most_volatile %}
+                    <tr>
+                        <td class="title">{{ r.title }}</td>
+                        <td class="num">${{ '%.2f'|format(r.min_price) }}</td>
+                        <td class="num">${{ '%.2f'|format(r.max_price) }}</td>
+                        <td class="num">${{ '%.2f'|format(r.volatility_std_dev) }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </section>
+        {% endif %}
+
+        {% if stats.top_by_value %}
+        <section>
+            <div class="accent-bar"></div>
+            <h2>Most Valuable</h2>
+            <table>
+                <thead><tr><th class="num" style="width:2em">#</th><th class="title">Record</th><th class="num">Value</th></tr></thead>
+                <tbody>
+                {% for r in stats.top_by_value %}
+                    <tr>
+                        <td class="num">{{ r.value_rank }}</td>
+                        <td class="title">{{ r.title }}</td>
+                        <td class="num">${{ '%.2f'|format(r.current_price) }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </section>
+        {% endif %}
+
+        <footer>
+            Figures computed by the app from {{ stats.record_count }} records; the
+            advisory reasons only over these numbers. Raw payload at <code>/stats.json</code>.
+        </footer>
+    {% endif %}
+</div>
+</body>
+</html>
